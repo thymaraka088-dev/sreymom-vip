@@ -2,19 +2,21 @@ import json
 import os
 import streamlit as st
 
-# Set page configuration
+# Set page configuration clean without hash fragment issues
 st.set_page_config(
     page_title="SreyMom VIP - វេបសាយសម្រាយរឿង និងរឿងភាគចិន",
     page_icon="🎬",
     layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
-# Folder for local assets like KHQR
+# Folder for local assets like QR Code and Thumbnails
 UPLOAD_DIR = "uploaded_videos"
 if not os.path.exists(UPLOAD_DIR):
   os.makedirs(UPLOAD_DIR)
 
 DB_FILE = "movies_db.json"
+CONFIG_FILE = "config.json"
 
 
 def load_movies():
@@ -32,18 +34,39 @@ def save_movies(movies):
     json.dump(movies, f, ensure_ascii=False, indent=4)
 
 
+def load_config():
+  if os.path.exists(CONFIG_FILE):
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+      try:
+        return json.load(f)
+      except:
+        return {"vip_key": "VIP8888"}
+  return {"vip_key": "VIP8888"}
+
+
+def save_config(config):
+  with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+    json.dump(config, f, ensure_ascii=False, indent=4)
+
+
 def get_youtube_thumbnail(url):
   """Extract YouTube Thumbnail automatically if it's a YouTube link"""
   if "youtube.com/watch?v=" in url:
-    video_id = url.split("watch?v=")[1].split("&")[0]
-    return f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+    try:
+      video_id = url.split("watch?v=")[1].split("&")[0]
+      return f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+    except:
+      return None
   elif "youtu.be/" in url:
-    video_id = url.split("youtu.be/")[1].split("?")[0]
-    return f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+    try:
+      video_id = url.split("youtu.be/")[1].split("?")[0]
+      return f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+    except:
+      return None
   return None
 
 
-# Custom Styling for Dark Cinematic Theme & Ad Spaces
+# Custom Styling for Dark Cinematic Theme & Clean UI
 st.markdown(
     """
     <style>
@@ -87,6 +110,9 @@ st.markdown(
         font-size: 13px;
         margin: 20px 0;
     }
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
     </style>
 """,
     unsafe_allow_html=True,
@@ -101,6 +127,8 @@ if "playing_title" not in st.session_state:
   st.session_state["playing_title"] = ""
 if "checkout_plan" not in st.session_state:
   st.session_state["checkout_plan"] = None
+if "is_vip" not in st.session_state:
+  st.session_state["is_vip"] = False
 
 # Navigation Bar Header using columns
 col_logo, col_nav1, col_nav2, col_nav3, col_nav4 = st.columns([3, 1, 1, 1, 1])
@@ -133,6 +161,7 @@ with col_nav4:
 st.markdown("---")
 
 movies_list = load_movies()
+config_data = load_config()
 
 # TAB 1: HOME PAGE
 if st.session_state["current_tab"] == "home":
@@ -172,7 +201,6 @@ if st.session_state["current_tab"] == "home":
         if yt_thumb:
           st.image(yt_thumb, use_container_width=True)
         else:
-          # Check local thumbnail file if not YouTube
           thumb_file = movie.get("thumbnail", "")
           thumb_path = os.path.join(UPLOAD_DIR, thumb_file)
           if thumb_file and os.path.exists(thumb_path):
@@ -254,7 +282,7 @@ elif st.session_state["current_tab"] == "movies":
           st.session_state["current_tab"] = "watch"
           st.rerun()
 
-# TAB 3: WATCH VIDEO PLAYER
+# TAB 3: WATCH VIDEO PLAYER WITH VIP GUARD & PASSCODE UNLOCK
 elif st.session_state["current_tab"] == "watch":
   if st.button("⬅️ ត្រឡប់ក្រោយ"):
     st.session_state["current_tab"] = "home"
@@ -263,25 +291,73 @@ elif st.session_state["current_tab"] == "watch":
   if st.session_state["playing_url"]:
     st.subheader(f"▶️ កំពុងទស្សនា៖ {st.session_state['playing_title']}")
 
-    st.markdown(
-        """
-        <div class="ad-banner" style="margin-bottom: 15px;">
-            📢 [ផ្ទាំងពាណិជ្ជកម្មខាងលើវីដេអូ / Sponsor Banner]
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
+    # VIP ACCESS CHECK (Passcode Guard)
+    if not st.session_state["is_vip"]:
+      st.markdown(
+          """
+            <div style="background: linear-gradient(135deg, #4c0519, #0f172a); padding: 30px; border-radius: 20px; border: 2px solid #e11d48; text-align: center; margin: 20px 0;">
+                <h2 style="color: #fb7185; margin-bottom: 10px;">🔒 វីដេអូនេះសម្រាប់តែសមាជិក VIP ប៉ុណ្ណោះ!</h2>
+                <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 15px;">សូមស្កេន KHQR បង់ប្រាក់ រួចទាក់ទងមកកាន់ Telegram: <a href="https://t.me/SounsovannaZing" target="_blank" style="color: #38bdf8; text-decoration: underline;">@SounsovannaZing</a> ដើម្បីទទួលបាន VIP Key បើកមើល!</p>
+            </div>
+        """,
+          unsafe_allow_html=True,
+      )
 
-    st.video(st.session_state["playing_url"])
+      col_qr, col_key = st.columns([1, 1])
 
-    st.markdown(
-        """
-        <div class="ad-banner" style="margin-top: 15px;">
-            📢 [ផ្ទាំងពាណិជ្ជកម្មក្រោមវីដេអូ / Sponsor Banner]
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
+      with col_qr:
+        qr_path = os.path.join(UPLOAD_DIR, "my_qr.png")
+        if os.path.exists(qr_path):
+          st.image(qr_path, width=230, caption="ស្កេនដើម្បីបង់ប្រាក់តាម KHQR")
+        else:
+          alt_qr_path = os.path.join(UPLOAD_DIR, "my_qr.jpg")
+          if os.path.exists(alt_qr_path):
+            st.image(
+                alt_qr_path, width=230, caption="ស្កេនដើម្បីបង់ប្រាក់តាម KHQR"
+            )
+          else:
+            st.warning("⚠️ រកមិនឃើញហ្វាលរូបភាព QR Code!")
+
+      with col_key:
+        st.markdown("#### 🔑 បញ្ចូល VIP Key ដើម្បី Unlock")
+        user_key = st.text_input(
+            "វាយបញ្ចូល VIP Key ដែលទទួលបានពី Admin ទីនេះ៖",
+            type="password",
+        )
+        if st.button("🔓 ផ្ទៀងផ្ទាត់ Key", use_container_width=True):
+          if user_key.strip() == config_data.get("vip_key", "VIP8888"):
+            st.session_state["is_vip"] = True
+            st.success("🎉 VIP Key ត្រឹមត្រូវ! វីដេអូត្រូវបាន Unlock រួចរាល់។")
+            st.rerun()
+          else:
+            st.error("❌ VIP Key មិនត្រឹមត្រូវទេ! សូមពិនិត្យម្តងទៀត។")
+
+    else:
+      # UNLOCKED PLAYER FOR VIP USERS
+      st.markdown(
+          """
+            <div class="ad-banner" style="margin-bottom: 15px;">
+                📢 [ផ្ទាំងពាណិជ្ជកម្មខាងលើវីដេអូ / Sponsor Banner]
+            </div>
+        """,
+          unsafe_allow_html=True,
+      )
+
+      st.video(st.session_state["playing_url"])
+
+      st.markdown(
+          """
+            <div class="ad-banner" style="margin-top: 15px;">
+                📢 [ផ្ទាំងពាណិជ្ជកម្មក្រោមវីដេអូ / Sponsor Banner]
+            </div>
+        """,
+          unsafe_allow_html=True,
+      )
+
+      if st.button("🔒 ចាកចេញពីសិទ្ធិ VIP (Lock វិញ)"):
+        st.session_state["is_vip"] = False
+        st.rerun()
+
   else:
     st.info("សូមជ្រើសរើសវីដេអូណាមួយដើម្បីទស្សនា។")
 
@@ -313,8 +389,7 @@ elif st.session_state["current_tab"] == "vip":
       else:
         st.warning(
             "⚠️ រកមិនឃើញហ្វាលរូបភាព QR Code របស់អ្នកទេ។ សូមដាក់រូបភាព QR"
-            " Code របស់អ្នកឈ្មោះថា 'my_qr.png' ចូលក្នុង Folder 'uploaded_videos'"
-            " នោះវាលេចចេញមកទីនេះដោយស្វ័យប្រវត្តិ!"
+            " Code របស់អ្នកឈ្មោះថា 'my_qr.png' ចូលក្នុង Folder 'uploaded_videos'!"
         )
 
     st.markdown(
@@ -322,7 +397,7 @@ elif st.session_state["current_tab"] == "vip":
         <div style="background-color: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; max-width: 600px; margin: 20px auto; text-align: center;">
             <p style="color: #94a3b8; font-size: 13px;">សូមបើក App ធនាគារណាមួយ (ABA, Acleda, Canadia...) ដើម្បីស្កេនបង់ប្រាក់</p>
             <hr style="border-color: #1e293b; margin: 15px 0;">
-            <p style="color: #38bdf8; font-size: 14px;">បន្ទាប់ពីបង់ប្រាក់រួច សូមផ្ញើ Slip មកកាន់ Telegram: <b style="color: #fb7185;">@seyhathy08</b> ដើម្បីបើកសិទ្ធិ VIP ជូនភ្លាមៗ!</p>
+            <p style="color: #38bdf8; font-size: 14px;">បន្ទាប់ពីបង់ប្រាក់រួច សូមផ្ញើ Slip មកកាន់ Telegram: <a href="https://t.me/SounsovannaZing" target="_blank" style="color: #fb7185; text-decoration: underline;">@SounsovannaZing</a> ដើម្បីទទួលបាន VIP Key បើកមើល!</p>
         </div>
     """,
         unsafe_allow_html=True,
@@ -386,8 +461,20 @@ elif st.session_state["current_tab"] == "vip":
 
 # TAB 5: ADMIN PANEL
 elif st.session_state["current_tab"] == "admin":
-  st.subheader("⚙️ ប្រព័ន្ធបន្ថែមរឿង និង Link វីដេអូ (Admin Panel)")
+  st.subheader("⚙️ ប្រព័ន្ធគ្រប់គ្រងវេបសាយ (Admin Panel)")
 
+  # SETTINGS FOR VIP KEY
+  st.markdown("### 🔑 កំណត់ VIP Key សម្រាប់អតិថិជន")
+  current_key = config_data.get("vip_key", "VIP8888")
+  new_vip_key = st.text_input("VIP Key បច្ចុប្បន្ន៖", value=current_key)
+  if st.button("💾 រក្សាទុក VIP Key ថ្មី"):
+    config_data["vip_key"] = new_vip_key.strip()
+    save_config(config_data)
+    st.success(f"បានអាប់ដេត VIP Key ទៅជា '{new_vip_key.strip()}' រួចរាល់!")
+
+  st.markdown("---")
+
+  # FORM TO ADD MOVIES
   with st.form("add_movie_form"):
     st.markdown("#### ➕ បន្ថែមរឿងថ្មីចូលវេបសាយ")
     new_title = st.text_input("ចំណងជើងរឿង ឬសម្រាយរឿង")
