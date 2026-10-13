@@ -2,11 +2,11 @@ import json
 import os
 import streamlit as st
 
-# Set page configuration clean without hash fragment issues
+# Set page configuration clean for Mobile-First layout
 st.set_page_config(
-    page_title="SreyMom VIP - វេបសាយសម្រាយរឿង និងរឿងភាគចិន",
+    page_title="SreyMom VIP - សម្រាយរឿង និងរឿងភាគចិន",
     page_icon="🎬",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed",
 )
 
@@ -66,53 +66,99 @@ def get_youtube_thumbnail(url):
   return None
 
 
-# Custom Styling for Dark Cinematic Theme & Clean UI
+# Advanced Pro Mobile CSS Styling
 st.markdown(
     """
     <style>
-    .main {
-        background-color: #020617;
-        color: #f8fafc;
-    }
+    /* Dark Modern Gradient Background */
     .stApp {
-        background-color: #020617;
+        background: radial-gradient(circle at top, #1e1b4b 0%, #020617 70%, #000000 100%) !important;
+        color: #f8fafc;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
-    h1, h2, h3, h4 {
-        color: #f8fafc !important;
+    .main .block-container {
+        max-width: 480px !important;
+        padding-top: 1rem !important;
+        padding-bottom: 5rem !important;
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
     }
-    .video-card {
-        background-color: #0f172a;
+    
+    /* Header Bar */
+    .app-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 15px;
+        background: rgba(15, 23, 42, 0.75);
+        backdrop-filter: blur(12px);
         border-radius: 16px;
-        border: 1px solid #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        margin-bottom: 15px;
+    }
+    .app-title {
+        font-size: 18px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #f43f5e 0%, #fb7185 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.5px;
+    }
+
+    /* Video Card Styling */
+    .movie-card-container {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
         overflow: hidden;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        margin-bottom: 15px;
     }
-    .video-card:hover {
-        border-color: #e11d48;
-    }
-    .vip-badge {
+    .vip-badge-tag {
         background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: #020617;
-        padding: 3px 8px;
-        border-radius: 6px;
+        color: #000;
         font-size: 10px;
+        font-weight: 900;
+        padding: 2px 8px;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .price-tag {
+        background: rgba(56, 189, 248, 0.2);
+        color: #38bdf8;
+        font-size: 11px;
         font-weight: bold;
+        padding: 2px 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(56, 189, 248, 0.3);
     }
-    .ad-banner {
-        background: linear-gradient(135deg, #1e293b, #0f172a);
-        border: 2px dashed #334155;
-        padding: 15px;
+    
+    /* Ad Banner Glassmorphism */
+    .ad-banner-pro {
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.8));
+        border: 1px dashed rgba(244, 63, 94, 0.3);
+        border-radius: 14px;
+        padding: 12px;
         text-align: center;
-        border-radius: 12px;
-        color: #64748b;
-        font-size: 13px;
-        margin: 20px 0;
+        color: #94a3b8;
+        font-size: 12px;
+        margin: 15px 0;
     }
+
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
+    
+    div.stButton > button {
+        background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        padding: 8px 16px !important;
+        box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3) !important;
+    }
     </style>
 """,
     unsafe_allow_html=True,
@@ -121,46 +167,29 @@ st.markdown(
 # Initialize Session States
 if "current_tab" not in st.session_state:
   st.session_state["current_tab"] = "home"
-if "playing_url" not in st.session_state:
-  st.session_state["playing_url"] = None
-if "playing_title" not in st.session_state:
-  st.session_state["playing_title"] = ""
-if "checkout_plan" not in st.session_state:
-  st.session_state["checkout_plan"] = None
+if "playing_movie" not in st.session_state:
+  st.session_state["playing_movie"] = None
 if "is_vip" not in st.session_state:
   st.session_state["is_vip"] = False
+if "unlocked_movies" not in st.session_state:
+  st.session_state["unlocked_movies"] = (
+      []
+  )  # List of movie titles unlocked individually
 if "admin_logged_in" not in st.session_state:
   st.session_state["admin_logged_in"] = False
 
-# Navigation Bar Header using columns
-col_logo, col_nav1, col_nav2, col_nav3, col_nav4 = st.columns([3, 1, 1, 1, 1])
-with col_logo:
-  st.markdown(
-      "### 🎬 <span style='color: #e11d48;'>SreyMom</span> VIP",
-      unsafe_allow_html=True,
-  )
-with col_nav1:
-  if st.button("🏠 ទំព័រដើម", use_container_width=True):
-    st.session_state["current_tab"] = "home"
-    st.session_state["checkout_plan"] = None
-    st.rerun()
-with col_nav2:
-  if st.button("📁 រឿងទាំងអស់", use_container_width=True):
-    st.session_state["current_tab"] = "movies"
-    st.session_state["checkout_plan"] = None
-    st.rerun()
-with col_nav3:
-  if st.button("👑 កញ្ចប់ VIP", use_container_width=True):
-    st.session_state["current_tab"] = "vip"
-    st.session_state["checkout_plan"] = None
-    st.rerun()
-with col_nav4:
-  if st.button("⚙️ Admin", use_container_width=True):
-    st.session_state["current_tab"] = "admin"
-    st.session_state["checkout_plan"] = None
-    st.rerun()
-
-st.markdown("---")
+# Mobile Top Header Bar
+st.markdown(
+    """
+    <div class="app-header">
+        <div class="app-title">🎬 SREYMOM VIP</div>
+        <div style="font-size: 11px; color: #fb7185; background: rgba(244, 63, 94, 0.15); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(244, 63, 94, 0.3);">
+            ● PRO STORE
+        </div>
+    </div>
+""",
+    unsafe_allow_html=True,
+)
 
 movies_list = load_movies()
 config_data = load_config()
@@ -169,390 +198,312 @@ config_data = load_config()
 if st.session_state["current_tab"] == "home":
   st.markdown(
       """
-        <div class="ad-banner">
-            📢 [កន្លែងដាក់ផ្ទាំងពាណិជ្ជកម្ម / Ad Banner - ផ្នែកខាងលើ]
+        <div style="background: linear-gradient(135deg, #881337 0%, #0f172a 100%); padding: 22px; border-radius: 18px; border: 1px solid rgba(244, 63, 94, 0.3); margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+            <span style="background: #f43f5e; color: #fff; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold;">SPECIAL OFFER</span>
+            <h2 style="font-size: 18px; margin-top: 10px; margin-bottom: 6px; color: #fff;">ទិញដាច់ជារឿង ឬជាសមាជិក VIP</h2>
+            <p style="color: #cbd5e1; font-size: 12px; margin: 0;">បងអាចជ្រើសរើសទិញមើលតែ ១ រឿង ឬទិញកញ្ចប់ VIP មើលបានគ្រប់រឿងឥតដែនកំណត់!</p>
         </div>
     """,
       unsafe_allow_html=True,
   )
 
-  st.markdown(
-      """
-        <div style="background: linear-gradient(to right, #4c0519, #0f172a, #020617); padding: 40px; border-radius: 20px; border: 1px solid #1e293b; margin-bottom: 30px;">
-            <span style="background-color: rgba(225, 29, 72, 0.2); color: #fb7185; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid rgba(225, 29, 72, 0.3);">រឿងពេញនិយមប្រចាំសប្តាហ៍</span>
-            <h1 style="font-size: 32px; margin-top: 15px; margin-bottom: 10px;">សម្រាយរឿងភាគចិនថ្មីៗ និងរឿងហ្វូល HD</h1>
-            <p style="color: #94a3b8; font-size: 14px; max-width: 600px;">ទស្សនារឿងភាគចិន និងវីដេអូសម្រាយរឿងល្បីៗជាភាសាខ្មែរ ដោយគ្មានការផ្សាយពាណិជ្ជកម្មរំខាននៅលើវេបសាយផ្ទាល់!</p>
-        </div>
-    """,
-      unsafe_allow_html=True,
-  )
-
-  st.subheader("🎥 វីដេអូរឿងទើបដាក់បញ្ចូលថ្មីៗ")
+  st.markdown("#### 🎥 រឿងទើបបញ្ចូលថ្មីៗ")
 
   if not movies_list:
-    st.info(
-        "⚠️ មិនទាន់មានវីដេអូត្រូវបានបញ្ចូលទេ។ សូមចូលទៅកាន់ផ្ទាំង Admin"
-        " ដើម្បីបន្ថែម Link រឿង។"
-    )
+    st.info("⚠️ មិនទាន់មានវីដេអូត្រូវបានបញ្ចូលទេ។ សូមចូលទៅកាន់ Admin Panel។")
   else:
-    cols = st.columns(3)
     for index, movie in enumerate(movies_list):
-      col = cols[index % 3]
-      with col:
+      cols = st.columns([1, 1.3])
+      with cols[0]:
         yt_thumb = get_youtube_thumbnail(movie["url"])
         if yt_thumb:
           st.image(yt_thumb, use_container_width=True)
         else:
-          thumb_file = movie.get("thumbnail", "")
-          thumb_path = os.path.join(UPLOAD_DIR, thumb_file)
-          if thumb_file and os.path.exists(thumb_path):
-            st.image(thumb_path, use_container_width=True)
-          else:
-            st.markdown(
-                """<div style="background-color: #1e293b; height: 150px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 35px;">🎬</div>""",
-                unsafe_allow_html=True,
-            )
+          st.markdown(
+              """<div style="background:#1e293b; height:100px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#64748b;">🎬</div>""",
+              unsafe_allow_html=True,
+          )
 
+      with cols[1]:
+        price = movie.get("price", "$0.99")
         st.markdown(
             f"""
-            <div style="padding: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span class="vip-badge">VIP</span>
-                    <span style="font-size: 11px; color: #64748b;">HD 1080p</span>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <span class="vip-badge-tag">VIP</span>
+                    <span class="price-tag">តម្លៃ៖ {price}</span>
                 </div>
-                <h4 style="color: #f1f5f9; font-size: 14px; margin-bottom: 12px; height: 40px; overflow: hidden; text-overflow: ellipsis;">{movie['title']}</h4>
-            </div>
-        """,
+                <h5 style="font-size: 13px; color: #f8fafc; margin-top: 8px; margin-bottom: 8px;">{movie['title']}</h5>
+            """,
             unsafe_allow_html=True,
         )
-
         if st.button(
-            "▶️ ចុចទស្សនា", key=f"home_watch_{index}", use_container_width=True
+            "▶️ ទស្សនា / ទិញរឿង",
+            key=f"home_watch_{index}",
+            use_container_width=True,
         ):
-          st.session_state["playing_url"] = movie["url"]
-          st.session_state["playing_title"] = movie["title"]
+          st.session_state["playing_movie"] = movie
           st.session_state["current_tab"] = "watch"
           st.rerun()
 
-  st.markdown(
-      """
-        <div class="ad-banner">
-            📢 [កន្លែងដាក់ផ្ទាំងពាណិជ្ជកម្ម / Ad Banner - ផ្នែកខាងក្រោម]
-        </div>
-    """,
-      unsafe_allow_html=True,
-  )
+      st.markdown(
+          "<hr style='border-color: rgba(255,255,255,0.05); margin: 10px 0;'>",
+          unsafe_allow_html=True,
+      )
 
 # TAB 2: ALL MOVIES
 elif st.session_state["current_tab"] == "movies":
-  st.subheader("📁 បញ្ជីរឿង និងសម្រាយរឿងទាំងអស់")
+  st.markdown("#### 📁 បញ្ជីវីដេអូរឿងទាំងអស់")
   if not movies_list:
     st.warning("មិនទាន់មានវីដេអូនៅក្នុងប្រព័ន្ធទេ។")
   else:
-    cols = st.columns(3)
     for index, movie in enumerate(movies_list):
-      col = cols[index % 3]
-      with col:
+      cols = st.columns([1, 1.3])
+      with cols[0]:
         yt_thumb = get_youtube_thumbnail(movie["url"])
         if yt_thumb:
           st.image(yt_thumb, use_container_width=True)
         else:
-          thumb_file = movie.get("thumbnail", "")
-          thumb_path = os.path.join(UPLOAD_DIR, thumb_file)
-          if thumb_file and os.path.exists(thumb_path):
-            st.image(thumb_path, use_container_width=True)
-          else:
-            st.markdown(
-                """<div style="background-color: #1e293b; height: 150px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 35px;">🎬</div>""",
-                unsafe_allow_html=True,
-            )
+          st.markdown(
+              """<div style="background:#1e293b; height:100px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#64748b;">🎬</div>""",
+              unsafe_allow_html=True,
+          )
 
+      with cols[1]:
+        price = movie.get("price", "$0.99")
         st.markdown(
             f"""
-            <div style="padding: 12px;">
-                <h4 style="color: #f1f5f9; font-size: 14px; margin-bottom: 12px; height: 40px; overflow: hidden; text-overflow: ellipsis;">{movie['title']}</h4>
-            </div>
-        """,
+                <span class="price-tag">តម្លៃ៖ {price}</span>
+                <h5 style="font-size: 13px; color: #f8fafc; margin-top: 8px; margin-bottom: 8px;">{movie['title']}</h5>
+            """,
             unsafe_allow_html=True,
         )
-
         if st.button(
-            "▶️ ទស្សនា", key=f"all_watch_{index}", use_container_width=True
+            "▶️ ទស្សនា / ទិញរឿង",
+            key=f"all_watch_{index}",
+            use_container_width=True,
         ):
-          st.session_state["playing_url"] = movie["url"]
-          st.session_state["playing_title"] = movie["title"]
+          st.session_state["playing_movie"] = movie
           st.session_state["current_tab"] = "watch"
           st.rerun()
 
-# TAB 3: WATCH VIDEO PLAYER WITH VIP GUARD & PASSCODE UNLOCK
+      st.markdown(
+          "<hr style='border-color: rgba(255,255,255,0.05); margin: 10px 0;'>",
+          unsafe_allow_html=True,
+      )
+
+# TAB 3: WATCH VIDEO PLAYER
 elif st.session_state["current_tab"] == "watch":
   if st.button("⬅️ ត្រឡប់ក្រោយ"):
     st.session_state["current_tab"] = "home"
     st.rerun()
 
-  if st.session_state["playing_url"]:
-    st.subheader(f"▶️ កំពុងទស្សនា៖ {st.session_state['playing_title']}")
+  movie = st.session_state.get("playing_movie")
+  if movie:
+    st.markdown(
+        f"<h4 style='font-size: 15px;'>▶️ {movie['title']}</h4>",
+        unsafe_allow_html=True,
+    )
 
-    # VIP ACCESS CHECK (Passcode Guard)
-    if not st.session_state["is_vip"]:
+    # Check if user is VIP OR has unlocked this specific movie
+    is_movie_unlocked = (
+        st.session_state["is_vip"]
+        or movie["title"] in st.session_state["unlocked_movies"]
+    )
+
+    if not is_movie_unlocked:
+      movie_price = movie.get("price", "$0.99")
+      movie_single_key = movie.get("movie_key", "M1234")
+
       st.markdown(
-          """
-            <div style="background: linear-gradient(135deg, #4c0519, #0f172a); padding: 30px; border-radius: 20px; border: 2px solid #e11d48; text-align: center; margin: 20px 0;">
-                <h2 style="color: #fb7185; margin-bottom: 10px;">🔒 វីដេអូនេះសម្រាប់តែសមាជិក VIP ប៉ុណ្ណោះ!</h2>
-                <p style="color: #cbd5e1; font-size: 14px; margin-bottom: 15px;">សូមស្កេន KHQR បង់ប្រាក់ រួចទាក់ទងមកកាន់ Telegram: <a href="https://t.me/SounsovannaZing" target="_blank" style="color: #38bdf8; text-decoration: underline;">@SounsovannaZing</a> ដើម្បីទទួលបាន VIP Key បើកមើល!</p>
+          f"""
+            <div style="background: linear-gradient(135deg, #4c0519, #0f172a); padding: 20px; border-radius: 16px; border: 1px solid #f43f5e; text-align: center; margin: 15px 0;">
+                <h3 style="color: #fb7185; font-size: 16px; margin-bottom: 8px;">🔒 រឿងនេះត្រូវការបង់ប្រាក់ដើម្បីមើល</h3>
+                <p style="color: #38bdf8; font-weight: bold; font-size: 14px;">• ទិញមើលតែរឿងនេះ៖ {movie_price}<br>• ឬទិញសមាជិក VIP (មើលបានគ្រប់រឿង)</p>
+                <p style="color: #cbd5e1; font-size: 11px;">ស្កេន KHQR បង់ប្រាក់ រួចផ្ញើ Slip ទៅ Telegram: <a href="https://t.me/SounsovannaZing" target="_blank" style="color: #fb7185;">@SounsovannaZing</a></p>
             </div>
         """,
           unsafe_allow_html=True,
       )
 
-      col_qr, col_key = st.columns([1, 1])
+      qr_png = os.path.join(UPLOAD_DIR, "my_qr.png")
+      qr_jpg = os.path.join(UPLOAD_DIR, "my_qr.jpg")
 
-      with col_qr:
-        qr_path = os.path.join(UPLOAD_DIR, "my_qr.png")
-        if os.path.exists(qr_path):
-          st.image(qr_path, width=230, caption="ស្កេនដើម្បីបង់ប្រាក់តាម KHQR")
+      if os.path.exists(qr_png):
+        st.image(qr_png, use_container_width=True)
+      elif os.path.exists(qr_jpg):
+        st.image(qr_jpg, use_container_width=True)
+      else:
+        st.warning("⚠️ រកមិនឃើញរូបភាព QR Code!")
+
+      st.markdown("##### 🔑 បញ្ចូល Key ដើម្បី Unlock មើលរឿង")
+      user_key = st.text_input(
+          "វាយបញ្ចូល VIP Key ឬ Movie Key ទីនេះ៖", type="password"
+      )
+      if st.button("🔓 ផ្ទៀងផ្ទាត់ Key", use_container_width=True):
+        entered_k = user_key.strip()
+        global_vip_key = config_data.get("vip_key", "VIP8888")
+
+        if entered_k == global_vip_key:
+          st.session_state["is_vip"] = True
+          st.success("🎉 Key VIP ត្រឹមត្រូវ! លោកអ្នកអាចមើលបានគ្រប់រឿង។")
+          st.rerun()
+        elif entered_k == movie_single_key:
+          st.session_state["unlocked_movies"].append(movie["title"])
+          st.success(f"🎉 បាន Unlock រឿង '{movie['title']}' ជោគជ័យ!")
+          st.rerun()
         else:
-          alt_qr_path = os.path.join(UPLOAD_DIR, "my_qr.jpg")
-          if os.path.exists(alt_qr_path):
-            st.image(
-                alt_qr_path, width=230, caption="ស្កេនដើម្បីបង់ប្រាក់តាម KHQR"
-            )
-          else:
-            st.warning("⚠️ រកមិនឃើញហ្វាលរូបភាព QR Code!")
-
-      with col_key:
-        st.markdown("#### 🔑 បញ្ចូល VIP Key ដើម្បី Unlock")
-        user_key = st.text_input(
-            "វាយបញ្ចូល VIP Key ដែលទទួលបានពី Admin ទីនេះ៖",
-            type="password",
-        )
-        if st.button("🔓 ផ្ទៀងផ្ទាត់ Key", use_container_width=True):
-          if user_key.strip() == config_data.get("vip_key", "VIP8888"):
-            st.session_state["is_vip"] = True
-            st.success("🎉 VIP Key ត្រឹមត្រូវ! វីដេអូត្រូវបាន Unlock រួចរាល់។")
-            st.rerun()
-          else:
-            st.error("❌ VIP Key មិនត្រឹមត្រូវទេ! សូមពិនិត្យម្តងទៀត។")
+          st.error("❌ Key មិនត្រឹមត្រូវទេ! សូមពិនិត្យម្តងទៀត។")
 
     else:
-      # UNLOCKED PLAYER FOR VIP USERS
       st.markdown(
-          """
-            <div class="ad-banner" style="margin-bottom: 15px;">
-                📢 [ផ្ទាំងពាណិជ្ជកម្មខាងលើវីដេអូ / Sponsor Banner]
-            </div>
-        """,
+          """<div class="ad-banner-pro">📢 [ផ្ទាំងពាណិជ្ជកម្មលើវីដេអូ]</div>""",
+          unsafe_allow_html=True,
+      )
+      st.video(movie["url"])
+      st.markdown(
+          """<div class="ad-banner-pro">📢 [ផ្ទាំងពាណិជ្ជកម្មក្រោមវីដេអូ]</div>""",
           unsafe_allow_html=True,
       )
 
-      st.video(st.session_state["playing_url"])
-
-      st.markdown(
-          """
-            <div class="ad-banner" style="margin-top: 15px;">
-                📢 [ផ្ទាំងពាណិជ្ជកម្មក្រោមវីដេអូ / Sponsor Banner]
-            </div>
-        """,
-          unsafe_allow_html=True,
-      )
-
-      if st.button("🔒 ចាកចេញពីសិទ្ធិ VIP (Lock វិញ)"):
+      if st.button("🔒 ចាកចេញពីការមើល (Lock វិញ)"):
         st.session_state["is_vip"] = False
+        st.session_state["unlocked_movies"] = []
         st.rerun()
 
-  else:
-    st.info("សូមជ្រើសរើសវីដេអូណាមួយដើម្បីទស្សនា។")
-
-# TAB 4: VIP SUBSCRIPTION & KHQR CHECKOUT
+# TAB 4: VIP SUBSCRIPTION
 elif st.session_state["current_tab"] == "vip":
-  if st.session_state["checkout_plan"]:
-    plan = st.session_state["checkout_plan"]
-    if st.button("⬅️ ត្រឡប់ក្រោយទៅរើសកញ្ចប់វិញ"):
-      st.session_state["checkout_plan"] = None
-      st.rerun()
+  st.markdown("#### 👑 កញ្ចប់សមាជិកភាព VIP (មើលបានគ្រប់រឿង)")
 
-    st.markdown(
-        f"""
-        <div style="background-color: #0f172a; padding: 30px; border-radius: 20px; border: 1px solid #1e293b; max-width: 600px; margin: 0 auto; text-align: center;">
-            <h2 style="color: #fb7185;">KHQR ទូទាត់ប្រាក់តាមប្រព័ន្ធធនាគារ</h2>
-            <p style="color: #cbd5e1; font-size: 15px; margin-bottom: 20px;">កញ្ចប់ដែលបានជ្រើសរើស៖ <b style="color: #38bdf8;">{plan["name"]} ({plan["price"]})</b></p>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    qr_path = os.path.join(UPLOAD_DIR, "my_qr.png")
-    if os.path.exists(qr_path):
-      st.image(qr_path, width=250, caption="ស្កេនដើម្បីបង់ប្រាក់តាម KHQR")
-    else:
-      alt_qr_path = os.path.join(UPLOAD_DIR, "my_qr.jpg")
-      if os.path.exists(alt_qr_path):
-        st.image(alt_qr_path, width=250, caption="ស្កេនដើម្បីបង់ប្រាក់តាម KHQR")
-      else:
-        st.warning(
-            "⚠️ រកមិនឃើញហ្វាលរូបភាព QR Code របស់អ្នកទេ។ សូមដាក់រូបភាព QR"
-            " Code របស់អ្នកឈ្មោះថា 'my_qr.png' ចូលក្នុង Folder 'uploaded_videos'!"
-        )
-
+  col1, col2 = st.columns(2)
+  with col1:
     st.markdown(
         """
-        <div style="background-color: #0f172a; padding: 20px; border-radius: 12px; border: 1px solid #1e293b; max-width: 600px; margin: 20px auto; text-align: center;">
-            <p style="color: #94a3b8; font-size: 13px;">សូមបើក App ធនាគារណាមួយ (ABA, Acleda, Canadia...) ដើម្បីស្កេនបង់ប្រាក់</p>
-            <hr style="border-color: #1e293b; margin: 15px 0;">
-            <p style="color: #38bdf8; font-size: 14px;">បន្ទាប់ពីបង់ប្រាក់រួច សូមផ្ញើ Slip មកកាន់ Telegram: <a href="https://t.me/SounsovannaZing" target="_blank" style="color: #fb7185; text-decoration: underline;">@SounsovannaZing</a> ដើម្បីទទួលបាន VIP Key បើកមើល!</p>
+        <div style="background: rgba(15, 23, 42, 0.8); padding: 15px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+            <h4 style="font-size: 14px;">ប្រចាំខែ</h4>
+            <h2 style="color: #fb7185; font-size: 22px;">$4.99</h2>
+            <p style="font-size: 11px; color: #94a3b8;">មើលគ្រប់រឿង HD ឥតដែនកំណត់</p>
         </div>
     """,
         unsafe_allow_html=True,
     )
-  else:
+  with col2:
     st.markdown(
-        "<div style='text-align: center;'><h2>👑 កញ្ចប់សមាជិកភាព VIP</h2><p"
-        " style='color: #94a3b8;'>ជ្រើសរើសកញ្ចប់ដែលបងពេញចិត្តដើម្បីទស្សនារឿងអត់ដែនកំណត់</p></div>",
+        """
+        <div style="background: linear-gradient(to bottom, #0f172a, #4c0519); padding: 15px; border-radius: 14px; border: 1px solid #f43f5e; text-align: center;">
+            <h4 style="font-size: 14px;">ប្រចាំឆ្នាំ</h4>
+            <h2 style="color: #fb7185; font-size: 22px;">$39.99</h2>
+            <p style="font-size: 11px; color: #94a3b8;">មើលគ្រប់រឿង 4K ចំណេញច្រើន</p>
+        </div>
+    """,
         unsafe_allow_html=True,
     )
-    st.markdown("<br>", unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
-    with col1:
-      st.markdown(
-          """
-            <div style="background-color: #0f172a; padding: 30px; border-radius: 20px; border: 1px solid #1e293b; text-align: center;">
-                <h3 style="color: #f1f5f9;">កញ្ចប់ប្រចាំខែ</h3>
-                <p style="color: #94a3b8; font-size: 13px;">សាកសមសម្រាប់ការកម្សាន្តរយៈពេលខ្លី</p>
-                <h2 style="color: #fb7185; font-size: 36px; margin: 20px 0;">$4.99 <span style="font-size: 14px; color: #94a3b8;">/ ១ខែ</span></h2>
-                <ul style="text-align: left; color: #cbd5e1; font-size: 14px; list-style: none; padding: 0; margin-bottom: 25px;">
-                    <li>✅ មើលរឿង VIP ទាំងអស់ឥតកំណត់</li>
-                    <li>✅ គុណភាពរូបភាពច្បាស់កម្រិត HD</li>
-                    <li>✅ គ្មានពាណិជ្ជកម្មរំខាន</li>
-                </ul>
-            </div>
-        """,
-          unsafe_allow_html=True,
-      )
-      if st.button("💳 ទូទាត់តាម KHQR (កញ្ចប់ប្រចាំខែ)", use_container_width=True):
-        st.session_state["checkout_plan"] = {
-            "name": "កញ្ចប់ប្រចាំខែ",
-            "price": "$4.99",
-        }
-        st.rerun()
+  st.markdown("---")
+  qr_png = os.path.join(UPLOAD_DIR, "my_qr.png")
+  qr_jpg = os.path.join(UPLOAD_DIR, "my_qr.jpg")
 
-    with col2:
-      st.markdown(
-          """
-            <div style="background: linear-gradient(to bottom, #0f172a, #4c0519); padding: 30px; border-radius: 20px; border: 1px solid #e11d48; text-align: center;">
-                <h3 style="color: #f1f5f9;">កញ្ចប់ប្រចាំឆ្នាំ <span style="background-color: #e11d48; font-size: 10px; padding: 2px 8px; border-radius: 6px;">ចំណេញច្រើន</span></h3>
-                <p style="color: #94a3b8; font-size: 13px;">សម្រាប់អ្នកគាំទ្រស្នាដៃសម្រាយរឿងដិតដាម</p>
-                <h2 style="color: #fb7185; font-size: 36px; margin: 20px 0;">$39.99 <span style="font-size: 14px; color: #94a3b8;">/ ១ឆ្នាំ</span></h2>
-                <ul style="text-align: left; color: #cbd5e1; font-size: 14px; list-style: none; padding: 0; margin-bottom: 25px;">
-                    <li>✅ មើលរឿង VIP ទាំងអស់ឥតកំណត់</li>
-                    <li>✅ គុណភាពរូបភាពច្បាស់កម្រិត 4K</li>
-                    <li>✅ ទស្សនាមុនគេពេលមានរឿងថ្មី</li>
-                </ul>
-            </div>
-        """,
-          unsafe_allow_html=True,
-      )
-      if st.button(
-          "💳 ទូទាត់តាម KHQR (កញ្ចប់ប្រចាំឆ្នាំ)", use_container_width=True
-      ):
-        st.session_state["checkout_plan"] = {
-            "name": "កញ្ចប់ប្រចាំឆ្នាំ",
-            "price": "$39.99",
-        }
-        st.rerun()
+  if os.path.exists(qr_png):
+    st.image(qr_png, use_container_width=True)
+  elif os.path.exists(qr_jpg):
+    st.image(qr_jpg, use_container_width=True)
 
-# TAB 5: ADMIN PANEL WITH PASSWORD PROTECTION
+  st.markdown(
+      """
+    <div style="text-align: center; font-size: 12px; color: #94a3b8; margin-top: 10px;">
+        បន្ទាប់ពីស្កេនបង់ប្រាក់រួច សូមផ្ញើ Slip ទៅ Telegram: <a href="https://t.me/SounsovannaZing" target="_blank" style="color: #fb7185;">@SounsovannaZing</a>
+    </div>
+""",
+      unsafe_allow_html=True,
+  )
+
+# TAB 5: ADMIN PANEL
 elif st.session_state["current_tab"] == "admin":
-  st.subheader("⚙️ ប្រព័ន្ធគ្រប់គ្រងវេបសាយ (Admin Panel)")
+  st.markdown("#### ⚙️ ប្រព័ន្ធគ្រប់គ្រង Admin")
 
-  # Check if Admin is logged in
   if not st.session_state["admin_logged_in"]:
-    st.markdown(
-        """
-        <div style="background-color: #0f172a; padding: 30px; border-radius: 16px; border: 1px solid #1e293b; max-width: 450px; margin: 40px auto; text-align: center;">
-            <h3 style="color: #fb7185; margin-bottom: 15px;">🔒 សូមវាយបញ្ចូលលេខសម្ងាត់ Admin</h3>
-            <p style="color: #94a3b8; font-size: 13px;">កន្លែងនេះសម្រាប់តែម្ចាស់វេបសាយប៉ុណ្ណោះ!</p>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
     entered_pass = st.text_input("Admin Password:", type="password")
-    if st.button("🔑 ចូលកាន់ផ្ទាំង Admin", use_container_width=True):
-      correct_pass = config_data.get("admin_pass", "admin123")
-      if entered_pass.strip() == correct_pass:
+    if st.button("🔑 ចូល Admin", use_container_width=True):
+      if entered_pass.strip() == config_data.get("admin_pass", "admin123"):
         st.session_state["admin_logged_in"] = True
-        st.success("🎉 ចូល Admin បានសម្រេច!")
         st.rerun()
       else:
-        st.error("❌ លេខសម្ងាត់ Admin មិនត្រឹមត្រូវទេ!")
+        st.error("❌ Password មិនត្រឹមត្រូវ!")
   else:
-    # LOGGED IN ADMIN FEATURES
-    if st.button("🔒 ចេញពីប្រព័ន្ធ Admin (Logout)"):
+    if st.button("🔒 Logout Admin"):
       st.session_state["admin_logged_in"] = False
       st.rerun()
 
     st.markdown("---")
-
-    # SETTINGS FOR VIP KEY & ADMIN PASSWORD
-    st.markdown("### 🔑 កំណត់ VIP Key & Admin Password")
-
-    current_key = config_data.get("vip_key", "VIP8888")
     new_vip_key = st.text_input(
-        "VIP Key ថ្មី (សម្រាប់ឱ្យអតិថិជនមើលរឿង):",
-        value=current_key,
+        "VIP Key មើលបានគ្រប់រឿង៖",
+        value=config_data.get("vip_key", "VIP8888"),
         type="password",
     )
-
-    current_admin_pass = config_data.get("admin_pass", "admin123")
     new_admin_pass = st.text_input(
-        "Admin Password ថ្មី (សម្រាប់ចូលផ្ទាំងនេះ):",
-        value=current_admin_pass,
+        "Admin Password ថ្មី៖",
+        value=config_data.get("admin_pass", "admin123"),
         type="password",
     )
 
-    if st.button("💾 រក្សាទុកការកំណត់ទាំងអស់"):
+    if st.button("💾 រក្សាទុក Key & Password"):
       config_data["vip_key"] = new_vip_key.strip()
       config_data["admin_pass"] = new_admin_pass.strip()
       save_config(config_data)
-      st.success("✅ បានរក្សាទុកការកំណត់សុវត្ថិភាពថ្មីជោគជ័យ!")
+      st.success("✅ បានរក្សាទុកជោគជ័យ!")
 
     st.markdown("---")
-
-    # FORM TO ADD MOVIES
     with st.form("add_movie_form"):
-      st.markdown("#### ➕ បន្ថែមរឿងថ្មីចូលវេបសាយ")
-      new_title = st.text_input("ចំណងជើងរឿង ឬសម្រាយរឿង")
-      new_url = st.text_input(
-          "YouTube Link (ប្រព័ន្ធនឹងទាញយក Thumbnail ដោយស្វ័យប្រវត្តិ)"
+      st.markdown("##### ➕ បន្ថែមរឿងថ្មី (កំណត់តម្លៃ & Key រឿងនីមួយៗ)")
+      new_title = st.text_input("ចំណងជើងរឿង")
+      new_url = st.text_input("YouTube Link")
+      new_price = st.text_input("តម្លៃរឿង (ឧ. $0.99 ឬ 4,000៛)", value="$0.99")
+      new_m_key = st.text_input(
+          "Key សម្រាប់ Unlock តែរឿងនេះមួយ (ឧ. M101)", value="M101"
       )
 
-      submit_btn = st.form_submit_button("💾 រក្សាទុកវីដេអូចូលប្រព័ន្ធ")
-      if submit_btn:
+      if st.form_submit_button("💾 រក្សាទុករឿង"):
         if new_title and new_url:
-          movies_list.append(
-              {"title": new_title, "url": new_url, "thumbnail": ""}
-          )
+          movies_list.append({
+              "title": new_title,
+              "url": new_url,
+              "price": new_price.strip(),
+              "movie_key": new_m_key.strip(),
+              "thumbnail": "",
+          })
           save_movies(movies_list)
-          st.success(f"បានបន្ថែមរឿង '{new_title}' ជោគជ័យ!")
+          st.success("បានបន្ថែមរឿង និងរៀបចំតម្លៃជោគជ័យ!")
           st.rerun()
-        else:
-          st.error(
-              "សូមបំពេញចំណងជើងរឿង និង Link វីដេអូឱ្យបានត្រឹមត្រូវ!"
-          )
 
     st.markdown("---")
-    st.markdown("### 📋 បញ្ជីវីដេអូដែលមានក្នុងប្រព័ន្ធ")
-    if not movies_list:
-      st.warning("មិនទាន់មានវីដេអូនៅក្នុងប្រព័ន្ធទេ។")
-    else:
-      for idx, movie in enumerate(movies_list):
-        col_name, col_del = st.columns([4, 1])
-        with col_name:
-          st.write(f"🎬 **{movie['title']}** — 🔗 `{movie['url']}`")
-        with col_del:
-          if st.button("🗑️ លុប", key=f"del_{idx}"):
-            movies_list.pop(idx)
-            save_movies(movies_list)
-            st.success("បានលុបរឿងចេញពីប្រព័ន្ធដោយជោគជ័យ!")
-            st.rerun()
+    st.markdown("##### 📋 បញ្ជីវីដេអូរឿងដែលមាន")
+    for idx, movie in enumerate(movies_list):
+      c1, c2 = st.columns([3, 1])
+      c1.write(
+          f"🎬 **{movie['title']}**\n\n💰 តម្លៃ៖ `{movie.get('price', '$0.49')}`"
+          f" | 🔑 Key: `{movie.get('movie_key', 'N/A')}`"
+      )
+      if c2.button("🗑️ លុប", key=f"del_{idx}"):
+        movies_list.pop(idx)
+        save_movies(movies_list)
+        st.rerun()
+
+# PRO MOBILE BOTTOM NAVIGATION BAR
+st.markdown("<br><br>", unsafe_allow_html=True)
+b_col1, b_col2, b_col3, b_col4 = st.columns(4)
+
+with b_col1:
+  if st.button("🏠", use_container_width=True):
+    st.session_state["current_tab"] = "home"
+    st.rerun()
+with b_col2:
+  if st.button("📁", use_container_width=True):
+    st.session_state["current_tab"] = "movies"
+    st.rerun()
+with b_col3:
+  if st.button("👑", use_container_width=True):
+    st.session_state["current_tab"] = "vip"
+    st.rerun()
+with b_col4:
+  if st.button("⚙️", use_container_width=True):
+    st.session_state["current_tab"] = "admin"
+    st.rerun()
