@@ -40,8 +40,8 @@ def load_config():
       try:
         return json.load(f)
       except:
-        return {"vip_key": "VIP8888"}
-  return {"vip_key": "VIP8888"}
+        return {"vip_key": "VIP8888", "admin_pass": "admin123"}
+  return {"vip_key": "VIP8888", "admin_pass": "admin123"}
 
 
 def save_config(config):
@@ -129,6 +129,8 @@ if "checkout_plan" not in st.session_state:
   st.session_state["checkout_plan"] = None
 if "is_vip" not in st.session_state:
   st.session_state["is_vip"] = False
+if "admin_logged_in" not in st.session_state:
+  st.session_state["admin_logged_in"] = False
 
 # Navigation Bar Header using columns
 col_logo, col_nav1, col_nav2, col_nav3, col_nav4 = st.columns([3, 1, 1, 1, 1])
@@ -459,53 +461,98 @@ elif st.session_state["current_tab"] == "vip":
         }
         st.rerun()
 
-# TAB 5: ADMIN PANEL
+# TAB 5: ADMIN PANEL WITH PASSWORD PROTECTION
 elif st.session_state["current_tab"] == "admin":
   st.subheader("⚙️ ប្រព័ន្ធគ្រប់គ្រងវេបសាយ (Admin Panel)")
 
-  # SETTINGS FOR VIP KEY
-  st.markdown("### 🔑 កំណត់ VIP Key សម្រាប់អតិថិជន")
-  current_key = config_data.get("vip_key", "VIP8888")
-  new_vip_key = st.text_input("VIP Key បច្ចុប្បន្ន៖", value=current_key)
-  if st.button("💾 រក្សាទុក VIP Key ថ្មី"):
-    config_data["vip_key"] = new_vip_key.strip()
-    save_config(config_data)
-    st.success(f"បានអាប់ដេត VIP Key ទៅជា '{new_vip_key.strip()}' រួចរាល់!")
-
-  st.markdown("---")
-
-  # FORM TO ADD MOVIES
-  with st.form("add_movie_form"):
-    st.markdown("#### ➕ បន្ថែមរឿងថ្មីចូលវេបសាយ")
-    new_title = st.text_input("ចំណងជើងរឿង ឬសម្រាយរឿង")
-    new_url = st.text_input(
-        "YouTube Link (ប្រព័ន្ធនឹងទាញយក Thumbnail ដោយស្វ័យប្រវត្តិ)"
+  # Check if Admin is logged in
+  if not st.session_state["admin_logged_in"]:
+    st.markdown(
+        """
+        <div style="background-color: #0f172a; padding: 30px; border-radius: 16px; border: 1px solid #1e293b; max-width: 450px; margin: 40px auto; text-align: center;">
+            <h3 style="color: #fb7185; margin-bottom: 15px;">🔒 សូមវាយបញ្ចូលលេខសម្ងាត់ Admin</h3>
+            <p style="color: #94a3b8; font-size: 13px;">កន្លែងនេះសម្រាប់តែម្ចាស់វេបសាយប៉ុណ្ណោះ!</p>
+        </div>
+    """,
+        unsafe_allow_html=True,
     )
 
-    submit_btn = st.form_submit_button("💾 រក្សាទុកវីដេអូចូលប្រព័ន្ធ")
-    if submit_btn:
-      if new_title and new_url:
-        movies_list.append({"title": new_title, "url": new_url, "thumbnail": ""})
-        save_movies(movies_list)
-        st.success(f"បានបន្ថែមរឿង '{new_title}' ជោគជ័យ!")
+    entered_pass = st.text_input("Admin Password:", type="password")
+    if st.button("🔑 ចូលកាន់ផ្ទាំង Admin", use_container_width=True):
+      correct_pass = config_data.get("admin_pass", "admin123")
+      if entered_pass.strip() == correct_pass:
+        st.session_state["admin_logged_in"] = True
+        st.success("🎉 ចូល Admin បានសម្រេច!")
         st.rerun()
       else:
-        st.error(
-            "សូមបំពេញចំណងជើងរឿង និង Link វីដេអូឱ្យបានត្រឹមត្រូវ!"
-        )
-
-  st.markdown("---")
-  st.markdown("### 📋 បញ្ជីវីដេអូដែលមានក្នុងប្រព័ន្ធ")
-  if not movies_list:
-    st.warning("មិនទាន់មានវីដេអូនៅក្នុងប្រព័ន្ធទេ។")
+        st.error("❌ លេខសម្ងាត់ Admin មិនត្រឹមត្រូវទេ!")
   else:
-    for idx, movie in enumerate(movies_list):
-      col_name, col_del = st.columns([4, 1])
-      with col_name:
-        st.write(f"🎬 **{movie['title']}** — 🔗 `{movie['url']}`")
-      with col_del:
-        if st.button("🗑️ លុប", key=f"del_{idx}"):
-          movies_list.pop(idx)
+    # LOGGED IN ADMIN FEATURES
+    if st.button("🔒 ចេញពីប្រព័ន្ធ Admin (Logout)"):
+      st.session_state["admin_logged_in"] = False
+      st.rerun()
+
+    st.markdown("---")
+
+    # SETTINGS FOR VIP KEY & ADMIN PASSWORD
+    st.markdown("### 🔑 កំណត់ VIP Key & Admin Password")
+
+    current_key = config_data.get("vip_key", "VIP8888")
+    new_vip_key = st.text_input(
+        "VIP Key ថ្មី (សម្រាប់ឱ្យអតិថិជនមើលរឿង):",
+        value=current_key,
+        type="password",
+    )
+
+    current_admin_pass = config_data.get("admin_pass", "admin123")
+    new_admin_pass = st.text_input(
+        "Admin Password ថ្មី (សម្រាប់ចូលផ្ទាំងនេះ):",
+        value=current_admin_pass,
+        type="password",
+    )
+
+    if st.button("💾 រក្សាទុកការកំណត់ទាំងអស់"):
+      config_data["vip_key"] = new_vip_key.strip()
+      config_data["admin_pass"] = new_admin_pass.strip()
+      save_config(config_data)
+      st.success("✅ បានរក្សាទុកការកំណត់សុវត្ថិភាពថ្មីជោគជ័យ!")
+
+    st.markdown("---")
+
+    # FORM TO ADD MOVIES
+    with st.form("add_movie_form"):
+      st.markdown("#### ➕ បន្ថែមរឿងថ្មីចូលវេបសាយ")
+      new_title = st.text_input("ចំណងជើងរឿង ឬសម្រាយរឿង")
+      new_url = st.text_input(
+          "YouTube Link (ប្រព័ន្ធនឹងទាញយក Thumbnail ដោយស្វ័យប្រវត្តិ)"
+      )
+
+      submit_btn = st.form_submit_button("💾 រក្សាទុកវីដេអូចូលប្រព័ន្ធ")
+      if submit_btn:
+        if new_title and new_url:
+          movies_list.append(
+              {"title": new_title, "url": new_url, "thumbnail": ""}
+          )
           save_movies(movies_list)
-          st.success("បានលុបរឿងចេញពីប្រព័ន្ធដោយជោគជ័យ!")
+          st.success(f"បានបន្ថែមរឿង '{new_title}' ជោគជ័យ!")
           st.rerun()
+        else:
+          st.error(
+              "សូមបំពេញចំណងជើងរឿង និង Link វីដេអូឱ្យបានត្រឹមត្រូវ!"
+          )
+
+    st.markdown("---")
+    st.markdown("### 📋 បញ្ជីវីដេអូដែលមានក្នុងប្រព័ន្ធ")
+    if not movies_list:
+      st.warning("មិនទាន់មានវីដេអូនៅក្នុងប្រព័ន្ធទេ។")
+    else:
+      for idx, movie in enumerate(movies_list):
+        col_name, col_del = st.columns([4, 1])
+        with col_name:
+          st.write(f"🎬 **{movie['title']}** — 🔗 `{movie['url']}`")
+        with col_del:
+          if st.button("🗑️ លុប", key=f"del_{idx}"):
+            movies_list.pop(idx)
+            save_movies(movies_list)
+            st.success("បានលុបរឿងចេញពីប្រព័ន្ធដោយជោគជ័យ!")
+            st.rerun()
